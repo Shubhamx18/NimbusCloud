@@ -1,28 +1,3 @@
-# -------------------------------------------------------
-# DESTROY WORKFLOW
-# Deletes all site infrastructure. Manual trigger only.
-#
-# What gets DESTROYED:
-#   ✅ CloudFront distribution
-#   ✅ Origin Access Control
-#   ✅ S3 bucket + all versioned objects
-#   ✅ Bucket policy, public access block, versioning, lifecycle
-#   ✅ IAM role policy (destroyed LAST — depends_on in iam.tf)
-#
-# What is PRESERVED (intentionally):
-#   🔒 OIDC provider  → prevent_destroy = true in iam.tf
-#   🔒 IAM role       → prevent_destroy = true in iam.tf
-#
-# WHY -target on destroy?
-#
-#   prevent_destroy = true makes `terraform destroy` (no targets)
-#   always fail — Terraform sees the protected resources in state
-#   and refuses to proceed, even though it would never actually delete them.
-#
-#   Solution: use -target to list only the DESTROYABLE resources.
-#   Terraform still respects depends_on order even with -target, so the
-#   IAM policy is still the very last thing removed.
-# -------------------------------------------------------
 name: Destroy AWS Infrastructure
 
 on:
@@ -39,11 +14,9 @@ jobs:
 
     steps:
 
-      # ── Step 1: Checkout ──────────────────────────────────
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ── Step 2: Authenticate to AWS via OIDC ─────────────
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -51,21 +24,15 @@ jobs:
           aws-region: ap-south-1
           role-session-name: GitHubActions-NimbusDestroy
 
-      # ── Step 3: Setup Terraform ───────────────────────────
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
 
-      # ── Step 4: Terraform Init ────────────────────────────
       - name: Terraform Init
         working-directory: ./terraform
         run: terraform init -input=false
 
-      # ── Step 5: Empty S3 bucket ───────────────────────────
-      # Must run BEFORE terraform destroy.
-      # Versioned buckets retain delete markers that block deletion
-      # even with force_destroy = true when objects were added outside Terraform.
       - name: Empty S3 site bucket
         run: |
           BUCKET="${{ secrets.S3_BUCKET_NAME }}"
@@ -87,17 +54,6 @@ jobs:
 
           echo "→ Bucket is empty."
 
-      # ── Step 6: Destroy (targeted — skips prevent_destroy resources) ──
-      #
-      # Terraform destroy order (reversed dependency graph):
-      #   1. aws_s3_bucket_policy                  (needs CF + S3 gone first)
-      #   2. aws_cloudfront_distribution
-      #   3. aws_cloudfront_origin_access_control
-      #   4. aws_s3_bucket_lifecycle_configuration
-      #   5. aws_s3_bucket_public_access_block
-      #   6. aws_s3_bucket_versioning
-      #   7. aws_s3_bucket
-      #   8. aws_iam_role_policy                   (depends_on all above → LAST)
       - name: Terraform Destroy
         working-directory: ./terraform
         run: |
@@ -111,9 +67,8 @@ jobs:
             -target=aws_s3_bucket_versioning.site \
             -target=aws_s3_bucket.site
 
-      # ── Step 7: Done ──────────────────────────────────────
       - name: Done
         run: |
           echo "✅ All site infrastructure destroyed."
-          echo "🔒 OIDC provider + IAM role preserved (prevent_destroy=true)."
+          echo "🔒 OIDC provider + IAM role preserved."
           echo "🚀 Push any commit to main to rebuild."

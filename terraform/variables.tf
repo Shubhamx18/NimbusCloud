@@ -1,7 +1,3 @@
-# -------------------------------------------------------
-# VARIABLES
-# -------------------------------------------------------
-
 variable "aws_region" {
   description = "AWS region to deploy resources"
   type        = string
@@ -15,23 +11,19 @@ variable "project_name" {
 }
 
 variable "environment" {
-  description = "Environment name (prod, dev, staging)"
+  description = "Environment name"
   type        = string
   default     = "prod"
 }
 
 variable "github_org" {
-  # Must be all lowercase - GitHub OIDC sub claim is always lowercase.
-  # Example: "Shubhamx18" -> "shubhamx18"
-  description = "GitHub username or org (lowercase only - OIDC sub is case-sensitive)"
+  description = "GitHub username or org (lowercase)"
   type        = string
   default     = "Shubhamx18"
 }
 
 variable "github_repo" {
-  # Must be lowercase and must match the repo running the workflow (this repo is nimbus-deploy).
-  # If it mismatches, OIDC sub will not match and AssumeRoleWithWebIdentity will fail.
-  description = "GitHub repository name (lowercase, must match workflow repo)"
+  description = "GitHub repository name"
   type        = string
   default     = "NimbusCloud"
 }

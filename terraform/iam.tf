@@ -1,12 +1,5 @@
-# -------------------------------------------------------
-# IAM → GitHub Actions OIDC authentication + deploy permissions
-# -------------------------------------------------------
-
 data "aws_caller_identity" "current" {}
 
-# -------------------------------------------------------
-# OIDC Provider → trust GitHub's token issuer
-# -------------------------------------------------------
 resource "aws_iam_openid_connect_provider" "github" {
   url            = "https://token.actions.githubusercontent.com"
   client_id_list = ["sts.amazonaws.com"]
@@ -21,9 +14,6 @@ resource "aws_iam_openid_connect_provider" "github" {
   }
 }
 
-# -------------------------------------------------------
-# IAM Role → assumed by GitHub Actions via OIDC
-# -------------------------------------------------------
 resource "aws_iam_role" "github_actions_deploy" {
   name = "${local.name_prefix}-github-actions-deploy"
   tags = local.common_tags
@@ -53,9 +43,6 @@ resource "aws_iam_role" "github_actions_deploy" {
   })
 }
 
-# -------------------------------------------------------
-# IAM Policy → least-privilege permissions for the pipeline
-# -------------------------------------------------------
 resource "aws_iam_role_policy" "github_actions_deploy" {
   name = "${local.name_prefix}-deploy-policy"
   role = aws_iam_role.github_actions_deploy.id
