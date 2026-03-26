@@ -1,0 +1,26 @@
+REM Initialize Terraform and connect to backend (S3)
+terraform init -input=false
+
+REM Show current resources in Terraform state
+terraform state list
+
+REM Import existing CloudFront distribution into state
+terraform import aws_cloudfront_distribution.site E2Q06B0MPTOMIQ
+
+REM Import existing CloudFront Origin Access Control (OAC)
+terraform import aws_cloudfront_origin_access_control.site E2MT666CZ8U7CP
+
+REM Import existing S3 bucket policy
+terraform import aws_s3_bucket_policy.site nimbuscloud-prod-site
+
+REM Import existing IAM role policy
+terraform import aws_iam_role_policy.github_actions_deploy nimbuscloud-prod-github-actions-deploy:nimbuscloud-prod-deploy-policy
+
+REM Verify all resources are now tracked correctly
+terraform state list
+
+REM Destroy selected infrastructure resources (single-line, no CMD issues)
+terraform destroy -auto-approve -target=aws_iam_role_policy.github_actions_deploy -target=aws_s3_bucket_policy.site -target=aws_cloudfront_distribution.site -target=aws_cloudfront_origin_access_control.site -target=aws_s3_bucket_lifecycle_configuration.site -target=aws_s3_bucket_public_access_block.site -target=aws_s3_bucket_versioning.site -target=aws_s3_bucket.site
+
+REM Final check of remaining resources in state
+terraform state list

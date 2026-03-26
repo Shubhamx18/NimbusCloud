@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NimbusDeploy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <nav>
+    <div class="logo">☁ NimbusDeploy</div>
+    <span class="badge">LIVE ON AWS</span>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-content">
+      <div class="tag">Cloud-Native Static Site Delivery</div>
+      <h1>Your site,<br/><span class="accent">deployed instantly.</span></h1>
+      <p>Push to GitHub. Done. This site is auto-deployed via<br/>GitHub Actions → S3 → CloudFront.</p>
+      <div class="stack-pills">
+        <span>AWS S3</span>
+        <span>CloudFront</span>
+        <span>IAM</span>
+        <span>Terraform</span>
+        <span>GitHub Actions</span>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="flow-box">
+        <div class="flow-item">
+          <div class="icon">📝</div>
+          <div>Push Code</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="flow-item">
+          <div class="icon">⚙️</div>
+          <div>CI/CD Runs</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="flow-item">
+          <div class="icon">🪣</div>
+          <div>S3 Sync</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="flow-item highlight">
+          <div class="icon">🌐</div>
+          <div>Live!</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="cards">
+    <div class="card">
+      <div class="card-icon">🪣</div>
+      <h3>S3 Bucket</h3>
+      <p>Private bucket with versioning enabled. Only CloudFront can read files via OAC. Lifecycle rules auto-clean old versions after 30 days.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🌍</div>
+      <h3>CloudFront CDN</h3>
+      <p>Global edge delivery with HTTPS. Files cached at edge locations worldwide. HTTP automatically redirects to HTTPS.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔐</div>
+      <h3>IAM + OIDC</h3>
+      <p>Zero static AWS keys. GitHub Actions authenticates via OIDC and assumes a least-privilege IAM role to deploy.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🚀</div>
+      <h3>GitHub Actions</h3>
+      <p>Every push to main triggers the pipeline. Files sync to S3 and CloudFront cache is invalidated automatically.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>Built with ☁ NimbusDeploy &nbsp;·&nbsp; Terraform &nbsp;·&nbsp; AWS &nbsp;·&nbsp; GitHub Actions</p>
+  </footer>
+
+  <script src="nimbus.js"></script>
+</body>
+</html>

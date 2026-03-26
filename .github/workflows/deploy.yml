@@ -1,0 +1,88 @@
+name: Deploy to AWS S3 + CloudFront
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: "ap-south-1"
+  CF_REGION: "us-east-1"
+
+jobs:
+  deploy:
+    name: Deploy Static Site
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActions-NimbusDeploy
+          audience: sts.amazonaws.com
+          mask-aws-account-id: true
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Sync HTML files
+        env:
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+        run: |
+          aws s3 sync ./src/ "s3://$S3_BUCKET_NAME/" \
+            --delete \
+            --exclude "*" \
+            --include "*.html" \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --exclude ".DS_Store" \
+            --region "$AWS_REGION"
+
+      - name: Sync static assets
+        env:
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+        run: |
+          aws s3 sync ./src/ "s3://$S3_BUCKET_NAME/" \
+            --exclude "*.html" \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude ".DS_Store" \
+            --exclude "*.map" \
+            --region "$AWS_REGION"
+
+      - name: Invalidate CloudFront cache
+        env:
+          CLOUDFRONT_ID: ${{ secrets.CLOUDFRONT_ID }}
+        run: |
+          echo "Using CloudFront ID: $CLOUDFRONT_ID"
+
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id "$CLOUDFRONT_ID" \
+            --paths "/*" \
+            --query 'Invalidation.Id' \
+            --output text \
+            --region "$CF_REGION")
+
+          echo "Waiting for invalidation $INVALIDATION_ID..."
+
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "$CLOUDFRONT_ID" \
+            --id "$INVALIDATION_ID" \
+            --region "$CF_REGION"
+
+          echo "Invalidation complete"
+
+      - name: Done
+        run: echo " Deploy complete!"
