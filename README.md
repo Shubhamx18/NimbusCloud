@@ -124,7 +124,7 @@ Go to your GitHub repo → **Settings** → **Secrets and variables** → **Acti
 |-------------|-------|
 | `AWS_ROLE_ARN` | from `github_actions_role_arn` output |
 | `S3_BUCKET_NAME` | from `s3_bucket_name` output |
-| `CLOUDFRONT_DISTRIBUTION_ID` | from `cloudfront_distribution_id` output |
+| `CLOUDFRONT_ID` | from `cloudfront_distribution_id` output |
 | `GH_ORG` | your GitHub username |
 | `GH_REPO` | your repo name |
 
